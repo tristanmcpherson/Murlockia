@@ -33,6 +33,7 @@ enum WarlockSpells
     SPELL_WARLOCK_BANE_OF_DOOM_EFFECT               = 18662,
     SPELL_WARLOCK_CREATE_HEALTHSTONE                = 34130,
     SPELL_WARLOCK_CURSE_OF_DOOM_EFFECT              = 18662,
+	SPELL_WARLOCK_DARK_INTENT_EFFECT				= 85767,
     SPELL_WARLOCK_DEMONIC_CIRCLE_ALLOW_CAST         = 62388,
     SPELL_WARLOCK_DEMONIC_CIRCLE_SUMMON             = 48018,
     SPELL_WARLOCK_DEMONIC_CIRCLE_TELEPORT           = 48020,
@@ -304,6 +305,41 @@ class spell_warl_bane_of_doom : public SpellScriptLoader
         {
             return new spell_warl_curse_of_doom_AuraScript();
         }
+};
+
+// 80398 - Dark Intent
+class spell_warl_dark_intent : public SpellScriptLoader
+{
+public:
+	spell_warl_dark_intent() : SpellScriptLoader("spell_warl_dark_intent") { }
+
+	class spell_warl_dark_intent_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_warl_dark_intent_SpellScript);
+
+		void HandleScriptEffect(SpellEffIndex /*index*/)
+		{
+			Unit* caster = GetCaster();
+			Unit* target = GetHitUnit();
+
+			if (!caster || !target)
+				return;
+			if (!caster->HasAura(SPELL_WARLOCK_DARK_INTENT_EFFECT))
+				caster->CastSpell(target, SPELL_WARLOCK_DARK_INTENT_EFFECT, true);
+			if (!target->HasAura(SPELL_WARLOCK_DARK_INTENT_EFFECT))
+				target->CastSpell(caster, SPELL_WARLOCK_DARK_INTENT_EFFECT, true);
+		}
+
+		void Register()
+		{
+			OnEffectHitTarget += SpellEffectFn(spell_warl_dark_intent_SpellScript::HandleScriptEffect, EFFECT_0, SPELL_EFFECT_TRIGGER_SPELL);
+		}
+	};
+
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_warl_dark_intent_SpellScript();
+	}
 };
 
 // 48018 - Demonic Circle: Summon
@@ -1445,6 +1481,7 @@ void AddSC_warlock_spell_scripts()
     new spell_warl_banish();
     new spell_warl_conflagrate();
     new spell_warl_create_healthstone();
+	new spell_warl_dark_intent();
     new spell_warl_demonic_circle_summon();
     new spell_warl_demonic_circle_teleport();
     new spell_warl_demonic_empowerment();
