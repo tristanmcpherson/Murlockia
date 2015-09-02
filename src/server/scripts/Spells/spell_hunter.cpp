@@ -30,7 +30,6 @@
 #include "SpellHistory.h"
 #include "SpellScript.h"
 #include "SpellAuraEffects.h"
-#include "SpellHistory.h"
 
 enum HunterSpells
 {
@@ -55,10 +54,7 @@ enum HunterSpells
     SPELL_HUNTER_SNIPER_TRAINING_R1                 = 53302,
     SPELL_HUNTER_SNIPER_TRAINING_BUFF_R1            = 64418,
     SPELL_HUNTER_STEADY_SHOT_FOCUS                  = 77443,
-    SPELL_HUNTER_THRILL_OF_THE_HUNT                 = 34720,
-	SPELL_HUNTER_GLYPH_KILL_SHOT					= 63067,
-	SPELL_HUNTER_GLYPH_KILL_SHOT_CD					= 90967,
-	SPELL_HUNTER_KILL_SHOT = 53351
+    SPELL_HUNTER_THRILL_OF_THE_HUNT                 = 34720
 };
 
 enum MiscSpells
@@ -1082,38 +1078,63 @@ class spell_hun_tnt : public SpellScriptLoader
         }
 };
 
-// Glyph Of Kill Shot
-class spell_hun_glyph_kill_shot : public SpellScriptLoader
+// 51753 - Camouflage
+class spell_hun_camouflage : public SpellScriptLoader
 {
 public:
-    spell_hun_glyph_kill_shot() : SpellScriptLoader("spell_hun_glyph_kill_shot") { }
+	spell_hun_camouflage() : SpellScriptLoader("spell_hun_camouflage") { }
 
-    class spell_hun_glyph_kill_shot_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_hun_glyph_kill_shot_SpellScript);
+	class spell_hun_camouflage_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_hun_camouflage_SpellScript);
 
-        void HandleGlyph()
-        {
-            if (GetCaster()->HasAura(SPELL_HUNTER_GLYPH_KILL_SHOT) && !GetCaster()->HasAura(SPELL_HUNTER_GLYPH_KILL_SHOT_CD))
-            {
-                if (GetHitUnit()->GetHealthPct() <= 20 && GetHitUnit()->GetHealth() > GetHitDamage())
-                {
-                    GetCaster()->AddAura(SPELL_HUNTER_GLYPH_KILL_SHOT_CD, GetCaster());
-                    GetCaster()->ToPlayer()->GetSpellHistory()->ResetCooldown(SPELL_HUNTER_KILL_SHOT, true);
-                }
-            }
-        }
+		void HandleDummy(SpellEffIndex /*effIndex*/)
+		{
+			Unit* caster = GetCaster();
+			caster->CastSpell(caster, 51755, true);
+			if (caster->ToPlayer())
+				if (Pet* pet = caster->ToPlayer()->GetPet())
+					pet->CastSpell(pet, 51755, true);
+		}
 
-        void Register()
-        {
-            OnHit += SpellHitFn(spell_hun_glyph_kill_shot_SpellScript::HandleGlyph);
-        }
-    };
+		void Register()
+		{
+			OnEffectHitTarget += SpellEffectFn(spell_hun_camouflage_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+		}
+	};
 
-    SpellScript* GetSpellScript() const override
-    {
-        return new spell_hun_glyph_kill_shot_SpellScript();
-    }
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_hun_camouflage_SpellScript();
+	}
+};
+
+// 80326 - Camouflage periodic
+class spell_hun_camouflage_periodic : public SpellScriptLoader
+{
+public:
+	spell_hun_camouflage_periodic() : SpellScriptLoader("spell_hun_camouflage_periodic") { }
+
+	class spell_hun_camouflage_periodic_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_hun_camouflage_periodic_AuraScript);
+
+		void HandlePeriodic(AuraEffect const* aurEff)
+		{
+			if (GetUnitOwner()->isMoving())
+				PreventDefaultAction();
+		}
+
+		void Register()
+		{
+			OnEffectPeriodic += AuraEffectPeriodicFn(spell_hun_camouflage_periodic_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_hun_camouflage_periodic_AuraScript();
+	}
 };
 
 void AddSC_hunter_spell_scripts()
@@ -1142,5 +1163,6 @@ void AddSC_hunter_spell_scripts()
     new spell_hun_target_only_pet_and_owner();
     new spell_hun_thrill_of_the_hunt();
     new spell_hun_tnt();
-	new spell_hun_glyph_kill_shot();
+	new spell_hun_camouflage_periodic();
+	new spell_hun_camouflage();
 }
