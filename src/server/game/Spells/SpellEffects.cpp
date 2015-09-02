@@ -5730,7 +5730,7 @@ void Spell::EffectResurrectWithAura(SpellEffIndex effIndex)
 
     if (Player* target = unit->ToPlayer())
     {
-        if (target->IsRessurectRequested())       // already have one active request
+        if (target->IsResurrectRequested())       // already have one active request
             return;
 
         uint32 health = target->CountPctFromMaxHealth(damage);
