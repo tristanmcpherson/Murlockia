@@ -485,7 +485,7 @@ class spell_warr_last_stand : public SpellScriptLoader
         }
 };
 
-// 7384, 7887, 11584, 11585 - Overpower
+// 7384 - Overpower
 class spell_warr_overpower : public SpellScriptLoader
 {
     public:
@@ -508,7 +508,6 @@ class spell_warr_overpower : public SpellScriptLoader
 
                 if (Player* target = GetHitPlayer())
                     if (target->IsNonMeleeSpellCast(false, false, true)) // UNIT_STATE_CASTING should not be used here, it's present during a tick for instant casts
-						// if (target->HasUnitState(UNIT_STATE_CASTING))
                         target->CastSpell(target, spellId, true);
             }
 
