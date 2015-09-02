@@ -5723,7 +5723,7 @@ void Spell::EffectResurrectWithAura(SpellEffIndex effIndex)
     if (effectHandleMode != SPELL_EFFECT_HANDLE_HIT_TARGET)
         return;
 
-	Unit* unit = corpseTarget ? sObjectAccessor->FindUnit(corpseTarget->GetOwnerGUID()) : unitTarget;
+	Unit* unit = m_targets.GetCorpseTarget() ? sObjectAccessor->FindUnit(m_targets.GetCorpseTarget()->GetOwnerGUID()) : unitTarget;
 
 	if (!unit || !unit->IsInWorld())
         return;
