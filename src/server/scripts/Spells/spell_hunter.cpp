@@ -1078,6 +1078,65 @@ class spell_hun_tnt : public SpellScriptLoader
         }
 };
 
+// 51753 - Camouflage
+class spell_hun_camouflage : public SpellScriptLoader
+{
+public:
+	spell_hun_camouflage() : SpellScriptLoader("spell_hun_camouflage") { }
+
+	class spell_hun_camouflage_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_hun_camouflage_SpellScript);
+
+		void HandleDummy(SpellEffIndex /*effIndex*/)
+		{
+			Unit* caster = GetCaster();
+			caster->CastSpell(caster, 51755, true);
+			if (caster->ToPlayer())
+				if (Pet* pet = caster->ToPlayer()->GetPet())
+					pet->CastSpell(pet, 51755, true);
+		}
+
+		void Register()
+		{
+			OnEffectHitTarget += SpellEffectFn(spell_hun_camouflage_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+		}
+	};
+
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_hun_camouflage_SpellScript();
+	}
+};
+
+// 80326 - Camouflage periodic
+class spell_hun_camouflage_periodic : public SpellScriptLoader
+{
+public:
+	spell_hun_camouflage_periodic() : SpellScriptLoader("spell_hun_camouflage_periodic") { }
+
+	class spell_hun_camouflage_periodic_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_hun_camouflage_periodic_AuraScript);
+
+		void HandlePeriodic(AuraEffect const* aurEff)
+		{
+			if (GetUnitOwner()->isMoving())
+				PreventDefaultAction();
+		}
+
+		void Register()
+		{
+			OnEffectPeriodic += AuraEffectPeriodicFn(spell_hun_camouflage_periodic_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_hun_camouflage_periodic_AuraScript();
+	}
+};
+
 void AddSC_hunter_spell_scripts()
 {
     new spell_hun_ancient_hysteria();
@@ -1104,4 +1163,6 @@ void AddSC_hunter_spell_scripts()
     new spell_hun_target_only_pet_and_owner();
     new spell_hun_thrill_of_the_hunt();
     new spell_hun_tnt();
+	new spell_hun_camouflage_periodic();
+	new spell_hun_camouflage();
 }

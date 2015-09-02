@@ -1584,6 +1584,7 @@ class Unit : public WorldObject
         bool IsLevitating() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY); }
         bool IsWalking() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALKING); }
         bool IsHovering() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_HOVER); }
+		bool IsCamouflaged() const { return HasAuraType(SPELL_AURA_MOD_CAMOUFLAGE); }
         bool SetWalk(bool enable);
         bool SetDisableGravity(bool disable, bool packetOnly = false);
         bool SetFall(bool enable);

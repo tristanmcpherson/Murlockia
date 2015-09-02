@@ -2996,6 +2996,42 @@ void SpellMgr::LoadSpellInfoCustomAttributes()
                 break;
         }
 
+		switch (spellInfo->Id)
+		{
+		case 13809: // Ice Trap
+		case 82941: // Ice Trap        - Trap Launcher
+		case 1499:  // Freezing Trap
+		case 60192: // Freezing Trap   - Trap Launcher
+		case 82939: // Explosive Trap  - Trap Launcher
+					// Dont Remove Stealth From Camouflage
+			spellInfo->AttributesEx |= SPELL_ATTR1_NOT_BREAK_STEALTH;
+			break;
+			// Immolation Trap
+		case 13795:
+			spellInfo->Effects[0].Effect = SPELL_EFFECT_SUMMON_OBJECT_SLOT3;
+			// Dont Remove Stealth From Camouflage
+			spellInfo->AttributesEx |= SPELL_ATTR1_NOT_BREAK_STEALTH;
+			break;
+			// Explosive Trap
+		case 13813:
+			spellInfo->Effects[0].Effect = SPELL_EFFECT_SUMMON_OBJECT_SLOT3;
+			// Dont Remove Stealth From Camouflage
+			spellInfo->AttributesEx |= SPELL_ATTR1_NOT_BREAK_STEALTH;
+			break;
+			// Snake Trap
+		case 34600:
+			spellInfo->Effects[0].Effect = SPELL_EFFECT_SUMMON_OBJECT_SLOT4;
+			// Dont Remove Stealth From Camouflage
+			spellInfo->AttributesEx |= SPELL_ATTR1_NOT_BREAK_STEALTH;
+			break;
+			// Camouflage
+		case 51755:
+			spellInfo->Effects[EFFECT_0].ApplyAuraName = SPELL_AURA_NONE;
+			break;
+		default:
+			break;
+		}
+
         spellInfo->_InitializeExplicitTargetMask();
     }
 

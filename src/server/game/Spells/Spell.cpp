@@ -2967,7 +2967,8 @@ void Spell::prepare(SpellCastTargets const* targets, AuraEffect const* triggered
         // skip triggered spell (item equip spell casting and other not explicit character casts/item uses)
         if (!(_triggeredCastFlags & TRIGGERED_IGNORE_AURA_INTERRUPT_FLAGS) && m_spellInfo->IsBreakingStealth())
         {
-            m_caster->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
+			if (!m_caster->HasAuraType(SPELL_AURA_MOD_CAMOUFLAGE))
+				m_caster->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
             for (uint32 i = 0; i < MAX_SPELL_EFFECTS; ++i)
                 if (m_spellInfo->Effects[i].GetUsedTargetObjectType() == TARGET_OBJECT_TYPE_UNIT)
                 {
@@ -4813,6 +4814,17 @@ SpellCastResult Spell::CheckCast(bool strict)
             }
         }
     }
+
+	// Camouflage handling, the Spellclassmask included in the spell is really messy but this check seems to work
+	if (m_caster->HasAuraType(SPELL_AURA_MOD_CAMOUFLAGE))
+		if (AuraEffect* camouflage = m_caster->GetAuraEffect(51755, EFFECT_2, m_caster->GetGUID()))
+			if (m_spellInfo->SpellFamilyFlags & camouflage->GetSpellInfo()->Effects[EFFECT_2].SpellClassMask)
+			{
+				if (m_spellInfo->AttributesEx & SPELL_ATTR1_MELEE_COMBAT_START || m_spellInfo->Attributes & SPELL_ATTR0_REQ_AMMO)
+					m_caster->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
+			}
+			else if (!m_spellInfo->IsPositive())
+				m_caster->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
 
     // caster state requirements
     // not for triggered spells (needed by execute)

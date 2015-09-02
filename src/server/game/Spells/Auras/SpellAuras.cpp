@@ -1003,6 +1003,8 @@ bool Aura::CanBeSaved() const
         case 44413: // Incanter's Absorption
         case 40075: // Fel Flak Fire
         case 55849: // Power Spark
+		case 80326: // Camouflage - perodic
+		case 80325: // Camouflage - Stealth
             return false;
     }
 
@@ -1490,7 +1492,21 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                         }
                     }
                     break;
-            }
+				case 51755: // Camouflage
+				{
+					if (apply)
+						target->CastSpell(target, 80326, true);
+					else
+					{
+						target->RemoveAurasDueToSpell(80326);
+						target->RemoveAurasDueToSpell(80325);
+						if (target->GetTypeId() == TYPEID_PLAYER)
+							if (Pet* playerPet = target->ToPlayer()->GetPet())
+								playerPet->RemoveAurasDueToSpell(51755);
+					}
+					break;
+				}
+			}
             break;
         case SPELLFAMILY_PALADIN:
             switch (GetId())
