@@ -5723,7 +5723,7 @@ void Spell::EffectResurrectWithAura(SpellEffIndex effIndex)
     if (effectHandleMode != SPELL_EFFECT_HANDLE_HIT_TARGET)
         return;
 
-    Unit* unit = m_targets.GetCorpseTarget() ? sObjectAccessor->FindUnit(m_targets.GetCorpseTarget()->GetOwnerGUID()) : unitTarget;
+	Unit* unit = corpseTarget ? sObjectAccessor->FindUnit(corpseTarget->GetOwnerGUID()) : unitTarget;
 
 	if (!unit || !unit->IsInWorld())
         return;
@@ -5736,6 +5736,8 @@ void Spell::EffectResurrectWithAura(SpellEffIndex effIndex)
         uint32 health = target->CountPctFromMaxHealth(damage);
         uint32 mana = CalculatePct(target->GetMaxPower(POWER_MANA), damage);
         uint32 resurrectAura = 0;
+
+
         if (sSpellMgr->GetSpellInfo(GetSpellInfo()->Effects[effIndex].TriggerSpell))
             resurrectAura = GetSpellInfo()->Effects[effIndex].TriggerSpell;
 
