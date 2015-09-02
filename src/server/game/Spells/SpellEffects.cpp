@@ -583,7 +583,7 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
 			{
 				m_caster->CastSpell(m_caster, 51755, true);
 				if (Unit* pet = m_caster->GetGuardianPet())
-					pet->CastSpell(pet, 51753, true);
+					pet->CastSpell(pet, 51755, true);
 				m_caster->CastSpell(m_caster, 51755, true);
 			}
 			break;
