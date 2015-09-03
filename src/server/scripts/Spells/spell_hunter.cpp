@@ -1095,10 +1095,10 @@ public:
 		void HandleDummy(SpellEffIndex /*effIndex*/)
 		{
 			Unit* caster = GetCaster();
-			caster->CastSpell(caster, 51753, true);
+			caster->CastSpell(caster, 51755, true);
 			if (Player* player = caster->ToPlayer())
 				if (Pet* pet = player->GetPet())
-					pet->CastSpell(pet, 51753, true);
+					pet->CastSpell(pet, 51755, true);
 		}
 
 		void Register()
