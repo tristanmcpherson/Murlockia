@@ -100,6 +100,12 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellInfo const* spellproto,
             // Deep Freeze
             else if (spellproto->SpellIconID == 2939 && spellproto->SpellVisual[0] == 9963)
                 return DIMINISHING_CONTROLLED_STUN;
+			// Ring of Frost
+            else if (spellproto->Id == 82691)
+            {
+                return DIMINISHING_DISORIENT;
+                return DIMINISHING_RING_OF_FROST;
+            }
             // Frost Nova / Freeze (Water Elemental)
             else if (spellproto->SpellIconID == 193)
                 return DIMINISHING_CONTROLLED_ROOT;

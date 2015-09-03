@@ -517,6 +517,8 @@ int32 AuraEffect::CalculateAmount(Unit* caster)
         case SPELL_AURA_MOD_CONFUSE:
         case SPELL_AURA_MOD_FEAR:
         case SPELL_AURA_MOD_STUN:
+			if (GetSpellInfo()->AuraInterruptFlags & AURA_INTERRUPT_FLAG_TAKE_DAMAGE2 && GetSpellInfo()->Id != 82691)
+                break;
         case SPELL_AURA_MOD_ROOT:
         case SPELL_AURA_TRANSFORM:
             m_canBeRecalculated = false;
