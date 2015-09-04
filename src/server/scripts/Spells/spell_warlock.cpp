@@ -32,6 +32,7 @@ enum WarlockSpells
     SPELL_WARLOCK_AFTERMATH_STUN                    = 85387,
     SPELL_WARLOCK_BANE_OF_DOOM_EFFECT               = 18662,
     SPELL_WARLOCK_CREATE_HEALTHSTONE                = 34130,
+	SPELL_WARLOCK_CoE								= 1490,
     SPELL_WARLOCK_CURSE_OF_DOOM_EFFECT              = 18662,
     SPELL_WARLOCK_DEMONIC_CIRCLE_ALLOW_CAST         = 62388,
     SPELL_WARLOCK_DEMONIC_CIRCLE_SUMMON             = 48018,
@@ -60,6 +61,14 @@ enum WarlockSpells
     SPELL_WARLOCK_IMPROVED_HEALTH_FUNNEL_R2         = 18704,
     SPELL_WARLOCK_IMPROVED_SOUL_FIRE_PCT            = 85383,
     SPELL_WARLOCK_IMPROVED_SOUL_FIRE_STATE          = 85385,
+	SPELL_WARLOCK_JINX_ENERGY						= 85540,
+	SPELL_WARLOCK_JINX_RAGE							= 85539,
+	SPELL_WARLOCK_JINX_RUNIC_POWER					= 85541,
+	SPELL_WARLOCK_JINX_FOCUS						= 85542,
+	SPELL_WARLOCK_JINX_R1							= 18179,
+	SPELL_WARLOCK_JINX_R2							= 85479,
+	SPELL_WARLOCK_JINX_CoE_R1						= 85547,
+	SPELL_WARLOCK_JINX_CoE_R2						= 86105,
     SPELL_WARLOCK_LIFE_TAP_ENERGIZE                 = 31818,
     SPELL_WARLOCK_LIFE_TAP_ENERGIZE_2               = 32553,
     SPELL_WARLOCK_NETHER_WARD                       = 91711,
@@ -256,6 +265,54 @@ class spell_warl_create_healthstone : public SpellScriptLoader
         {
             return new spell_warl_create_healthstone_SpellScript();
         }
+};
+
+class spell_warl_curse_of_the_elements : public SpellScriptLoader
+{
+public:
+	spell_warl_curse_of_the_elements() : SpellScriptLoader("spell_warl_curse_of_the_elements") { }
+
+	class spell_warl_curse_of_the_elements_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_curse_of_the_elements_AuraScript);
+
+		bool Validate(SpellInfo const* /*spellInfo*/)
+		{
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R1))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R2))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_CoE_R1))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_CoE_R2))
+				return false;
+
+			return true;
+		}
+
+		void HandleEffectPeriodic(AuraEffect const* /*aurEff*/)
+		{
+			Unit* caster = GetCaster();
+			Unit* target = GetTarget();
+			if (!caster || !target)
+				return;
+
+			if (caster->HasAura(SPELL_WARLOCK_JINX_R2))
+				caster->CastSpell(target, SPELL_WARLOCK_JINX_CoE_R2, true);
+			else if (caster->HasAura(SPELL_WARLOCK_JINX_R1))
+				caster->CastSpell(target, SPELL_WARLOCK_JINX_CoE_R1, true);
+		}
+
+		void Register()
+		{
+			OnEffectPeriodic += AuraEffectPeriodicFn(spell_warl_curse_of_the_elements_AuraScript::HandleEffectPeriodic, EFFECT_2, SPELL_AURA_PERIODIC_DUMMY);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_curse_of_the_elements_AuraScript();
+	}
 };
 
 // 603 - Bane of Doom
@@ -459,6 +516,116 @@ class spell_warl_demon_soul : public SpellScriptLoader
         {
             return new spell_warl_demon_soul_SpellScript;
         }
+};
+
+class spell_warl_curse_of_weakness : public SpellScriptLoader
+{
+public:
+	spell_warl_curse_of_weakness() : SpellScriptLoader("spell_warl_curse_of_weakness") { }
+
+	class spell_warl_curse_of_weakness_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_warl_curse_of_weakness_SpellScript);
+
+		bool Validate(SpellInfo const* /*spellInfo*/)
+		{
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_ENERGY))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_RAGE))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_RUNIC_POWER))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_FOCUS))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R1))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R2))
+				return false;
+
+			return true;
+		}
+
+		void HandleJinx()
+		{
+			Unit* caster = GetCaster();
+			Unit* target = GetHitUnit();
+			if (!caster || !target)
+				return;
+
+			uint32 trigerred_spell = 0;
+			switch (target->getPowerType())
+			{
+			case POWER_RAGE:
+				trigerred_spell = SPELL_WARLOCK_JINX_RAGE;
+				break;
+			case POWER_FOCUS:
+				trigerred_spell = SPELL_WARLOCK_JINX_FOCUS;
+				break;
+			case POWER_ENERGY:
+				trigerred_spell = SPELL_WARLOCK_JINX_ENERGY;
+				break;
+			case POWER_RUNIC_POWER:
+				trigerred_spell = SPELL_WARLOCK_JINX_RUNIC_POWER;
+				break;
+			default:
+				return;
+			}
+
+			if (AuraEffect const* aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_WARLOCK, 5002, EFFECT_1))
+			{
+				int32 basepoints0 = aurEff->GetAmount();
+				caster->CastCustomSpell(target, trigerred_spell, &basepoints0, NULL, NULL, true);
+			}
+		}
+
+		void Register()
+		{
+			OnHit += SpellHitFn(spell_warl_curse_of_weakness_SpellScript::HandleJinx);
+		}
+	};
+
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_warl_curse_of_weakness_SpellScript();
+	}
+};
+
+class spell_warl_jinx_coe : public SpellScriptLoader
+{
+public:
+	spell_warl_jinx_coe() : SpellScriptLoader("spell_warl_jinx_coe") { }
+
+	class spell_warl_jinx_coe_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_warl_jinx_coe_SpellScript);
+
+		void FilterTargetsInitial(std::list<WorldObject*>& targets)
+		{
+			targets.remove_if(Trinity::UnitAuraCheck(true, SPELL_WARLOCK_CoE));
+			if (targets.size() > 15)
+				targets.resize(15);
+
+			sharedTargets = targets;
+		}
+
+		void FilterTargetsSubsequent(std::list<WorldObject*>& targets)
+		{
+			targets = sharedTargets;
+		}
+
+		void Register()
+		{
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_warl_jinx_coe_SpellScript::FilterTargetsInitial, EFFECT_0, TARGET_UNIT_DEST_AREA_ENEMY);
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_warl_jinx_coe_SpellScript::FilterTargetsSubsequent, EFFECT_1, TARGET_UNIT_DEST_AREA_ENEMY);
+		}
+
+		std::list<WorldObject*> sharedTargets;
+	};
+
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_warl_jinx_coe_SpellScript();
+	}
 };
 
 // 47193 - Demonic Empowerment
@@ -1445,6 +1612,8 @@ void AddSC_warlock_spell_scripts()
     new spell_warl_banish();
     new spell_warl_conflagrate();
     new spell_warl_create_healthstone();
+	new spell_warl_curse_of_the_elements();
+	new spell_warl_curse_of_weakness();
     new spell_warl_demonic_circle_summon();
     new spell_warl_demonic_circle_teleport();
     new spell_warl_demonic_empowerment();
@@ -1457,6 +1626,7 @@ void AddSC_warlock_spell_scripts()
     new spell_warl_health_funnel();
     new spell_warl_healthstone_heal();
     new spell_warl_improved_soul_fire();
+	new spell_warl_jinx_coe();
     new spell_warl_life_tap();
     new spell_warl_nether_ward_overrride();
     new spell_warl_seduction();
