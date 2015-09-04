@@ -611,7 +611,7 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
 					targets.SetDst(*m_caster);
 
 				// Remove cooldown - summon spellls have category
-				m_caster->ToPlayer()->GetSpellHistory->ResetCooldown(spell_id, true);
+				m_caster->ToPlayer()->GetSpellHistory()->ResetCooldown(spell_id, true);
 				break;
 			}
 			break;
