@@ -1180,7 +1180,7 @@ class spell_sha_thunderstorm : public SpellScriptLoader
                 if (GetCaster()->HasAura(SPELL_SHAMAN_GLYPH_OF_THUNDERSTORM))
                     PreventHitDefaultEffect(effIndex);
 				
-				caster->CastSpell(GetHitUnit(), 100955, true);
+				GetCaster()->CastSpell(GetHitUnit(), 100955, true);
             }
 
             void Register() override
