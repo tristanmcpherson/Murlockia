@@ -541,6 +541,9 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
 
     if (!unitTarget && !gameObjTarget && !itemTarget)
         return;
+	
+	uint32 spell_id = 0;
+	SpellCastTargets targets;
 
     // selection by spell family
     switch (m_spellInfo->SpellFamilyName)
