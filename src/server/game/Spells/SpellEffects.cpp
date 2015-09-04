@@ -586,6 +586,31 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
 					pet->CastSpell(pet, 51753, true);
 				m_caster->CastSpell(m_caster, 51755, true);
 			}
+			case SPELLFAMILY_DEATHKNIGHT:
+			switch (m_spellInfo->Id)
+			{
+			case 46584: // Raise Dead
+				if (m_caster->GetTypeId() != TYPEID_PLAYER)
+					return;
+
+				// Do we have talent Master of Ghouls?
+				if (m_caster->HasAura(52143) && effIndex != 1)
+					return;
+
+				if (!m_caster->HasAura(52143) && effIndex != 0)
+					return;
+
+				spell_id = m_spellInfo->Effects[effIndex].BasePoints;
+
+				if (m_targets.HasDst())
+					targets.SetDst(*m_targets.GetDstPos());
+				else
+					targets.SetDst(*m_caster);
+
+				// Remove cooldown - summon spellls have category
+				m_caster->ToPlayer()->GetSpellHistory->ResetCooldown(spell_id, true);
+				break;
+			}
 			break;
         default:
             break;
