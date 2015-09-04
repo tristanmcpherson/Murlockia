@@ -1243,10 +1243,6 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                         if (GetStackAmount() >= 5 && !target->HasAura(50812))
                             target->CastSpell(target, 50812, true);
                         break;
-                    case 60970: // Heroic Fury (remove Intercept cooldown)
-                        if (target->GetTypeId() == TYPEID_PLAYER)
-                            target->GetSpellHistory()->ResetCooldown(20252, true);
-                        break;
                 }
                 break;
             case SPELLFAMILY_DRUID:
@@ -1341,6 +1337,15 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                     if (target->HasAura(58039)) // Glyph of Blurred Speed
                         target->CastSpell(target, 61922, true); // Sprint (waterwalk)
                 break;
+			case SPELLFAMILY_WARRIOR:
+				switch (GetId()) 
+				{
+					case 60970: // Heroic Fury (remove Intercept cooldown)
+						if (target->GetTypeId() == TYPEID_PLAYER)
+							target->GetSpellHistory()->ResetCooldown(20252, true);
+						break;
+				}
+				break;
         }
     }
     // mods at aura remove
