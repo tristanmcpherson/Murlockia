@@ -1619,7 +1619,7 @@ void AddSC_deathknight_spell_scripts()
     new spell_dk_necrotic_strike();
     new spell_dk_pestilence();
     new spell_dk_presence();
-    new spell_dk_raise_dead();
+    //new spell_dk_raise_dead();
     new spell_dk_rune_tap_party();
     new spell_dk_scent_of_blood();
     new spell_dk_scourge_strike();
