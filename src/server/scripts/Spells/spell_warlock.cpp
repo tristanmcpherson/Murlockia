@@ -1917,7 +1917,7 @@ public:
 		void CalculateShadowResistanceAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
 		{
 			if (Unit* pet = GetUnitOwner())
-				if (pet->IsPet)
+				if (pet->IsPet())
 					if (Unit* owner = pet->GetOwner())
 					{
 						float ownerBonus = 0.0f;
