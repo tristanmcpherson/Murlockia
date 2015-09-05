@@ -14680,6 +14680,24 @@ Aura* Unit::AddAura(SpellInfo const* spellInfo, uint8 effMask, Unit* target)
     return NULL;
 }
 
+Aura* Unit::AddAuraForTarget(Aura* aura, Unit* target)
+{
+    if (!target)
+        return NULL;
+
+    if (Aura* newAura = AddAura(aura->GetSpellInfo(), aura->GetEffectMask(), target))
+    {
+        newAura->SetMaxDuration(aura->GetDuration());
+        newAura->SetDuration(aura->GetDuration());
+        for (int i = 0; i < MAX_SPELL_EFFECTS; ++i)
+            if (aura->GetEffectMask() & (1 << i) && newAura->GetEffectMask() & (1 << i))
+                newAura->GetEffect(i)->SetAmount(aura->GetEffect(i)->GetAmount());
+
+        return newAura;
+    }
+    return NULL;
+}
+
 void Unit::SetAuraStack(uint32 spellId, Unit* target, uint32 stack)
 {
     Aura* aura = target->GetAura(spellId, GetGUID());
