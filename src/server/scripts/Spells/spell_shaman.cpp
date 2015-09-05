@@ -61,7 +61,9 @@ enum ShamanSpells
     SPELL_SHAMAN_TOTEM_EARTHBIND_TOTEM          = 6474,
     SPELL_SHAMAN_TOTEM_EARTHEN_POWER            = 59566,
     SPELL_SHAMAN_TOTEM_HEALING_STREAM_HEAL      = 52042,
-    SPELL_SHAMAN_TIDAL_WAVES                    = 53390
+    SPELL_SHAMAN_TIDAL_WAVES                    = 53390,
+	SHAMAN_SPELL_FULMINATION                    = 88766,
+	SHAMAN_SPELL_FULMINATION_INSTANT			= 95774
 };
 
 enum ShamanSpellIcons
@@ -1233,6 +1235,52 @@ class spell_sha_tidal_waves : public SpellScriptLoader
         }
 };
 
+// Earth shock - Fulmination
+class spell_sha_fulmination : public SpellScriptLoader
+{
+    public:
+        spell_sha_fulmination() : SpellScriptLoader("spell_sha_fulmination") { }
+
+        class spell_sha_fulmination_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_sha_fulmination_SpellScript);
+
+            void HandleOnHit()
+            {
+                Unit* caster = GetCaster();
+                if (AuraEffect* fulmination = caster->GetDummyAuraEffect(SPELLFAMILY_SHAMAN, 2010, EFFECT_0))
+                    if (Aura* lShield = caster->GetAura(324, caster->GetGUID()))
+                        if (lShield->GetCharges() > fulmination->GetAmount())
+                        {
+                            uint8 charges = lShield->GetCharges() - fulmination->GetAmount();
+                            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(lShield->GetSpellInfo()->Effects[EFFECT_0].TriggerSpell);
+                            // Done fixed damage bonus auras
+                            int32 bonus  = caster->SpellBaseDamageBonusDone(spellInfo->GetSchoolMask()) * 0.267f;
+                            // Unsure about the calculation
+                            int32 basepoints0 = spellInfo->Effects[EFFECT_0].CalcValue(caster) + bonus;
+                            if (Player* modOwner = caster->GetSpellModOwner())
+                                modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_DAMAGE, basepoints0);
+
+                            basepoints0 *= charges;
+                            caster->CastCustomSpell(GetHitUnit(), SHAMAN_SPELL_FULMINATION, &basepoints0, NULL, NULL, true);
+                            // Remove Glow
+                            caster->RemoveAurasDueToSpell(SHAMAN_SPELL_FULMINATION_INSTANT);
+                            lShield->SetCharges(fulmination->GetAmount());
+                        }
+            }
+
+            void Register()
+            {
+                OnHit += SpellHitFn(spell_sha_fulmination_SpellScript::HandleOnHit);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_sha_fulmination_SpellScript();
+        }
+};
+
 void AddSC_shaman_spell_scripts()
 {
     new spell_sha_ancestral_awakening();
@@ -1262,4 +1310,5 @@ void AddSC_shaman_spell_scripts()
     new spell_sha_telluric_currents();
     new spell_sha_thunderstorm();
     new spell_sha_tidal_waves();
+	new spell_sha_fulmination();
 }
