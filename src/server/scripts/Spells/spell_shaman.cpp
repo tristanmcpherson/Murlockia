@@ -1244,7 +1244,7 @@ public:
 
     class spell_sha_fulminationSpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_sha_fulminationSpellScript)
+        PrepareSpellScript(spell_sha_fulminationSpellScript);
 
         bool Validate(SpellEntry const * /*spellEntry*/)
         {
