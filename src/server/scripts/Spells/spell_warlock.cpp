@@ -2009,7 +2009,7 @@ class spell_sha_lava_lash_trigger : public SpellScriptLoader
 
         class spell_sha_lava_lash_trigger_SpellScript : public SpellScript
         {
-            PrepareSpellScript(spell_sha_lava_lash_trigger_SpellScript)
+            PrepareSpellScript(spell_sha_lava_lash_trigger_SpellScript);
 
             bool Load()
             {
