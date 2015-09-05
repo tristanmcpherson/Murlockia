@@ -65,6 +65,7 @@ enum ShamanSpells
     SHAMAN_SPELL_FULMINATION                	= 88766,
     SHAMAN_SPELL_FULMINATION_TRIGGERED      	= 88767,
     SHAMAN_SPELL_FULMINATION_INFO           	= 95774,
+	SHAMAN_SPELL_LIGHTNING_SHIELD_PROC          = 26364
 };
 
 enum ShamanSpellIcons
