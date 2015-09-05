@@ -62,8 +62,9 @@ enum ShamanSpells
     SPELL_SHAMAN_TOTEM_EARTHEN_POWER            = 59566,
     SPELL_SHAMAN_TOTEM_HEALING_STREAM_HEAL      = 52042,
     SPELL_SHAMAN_TIDAL_WAVES                    = 53390,
-	SHAMAN_SPELL_FULMINATION                    = 88766,
-	SHAMAN_SPELL_FULMINATION_INSTANT			= 95774
+    SHAMAN_SPELL_FULMINATION                	= 88766,
+    SHAMAN_SPELL_FULMINATION_TRIGGERED      	= 88767,
+    SHAMAN_SPELL_FULMINATION_INFO           	= 95774,
 };
 
 enum ShamanSpellIcons
@@ -1235,50 +1236,67 @@ class spell_sha_tidal_waves : public SpellScriptLoader
         }
 };
 
-// Earth shock - Fulmination
+// 88766 Fulmination handled in 8042 Earth Shock
 class spell_sha_fulmination : public SpellScriptLoader
 {
-    public:
-        spell_sha_fulmination() : SpellScriptLoader("spell_sha_fulmination") { }
+public:
+    spell_sha_fulmination() : SpellScriptLoader("spell_sha_fulmination") { }
 
-        class spell_sha_fulmination_SpellScript : public SpellScript
+    class spell_sha_fulminationSpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_sha_fulminationSpellScript)
+
+        bool Validate(SpellEntry const * /*spellEntry*/)
         {
-            PrepareSpellScript(spell_sha_fulmination_SpellScript);
-
-            void HandleOnHit()
-            {
-                Unit* caster = GetCaster();
-                if (AuraEffect* fulmination = caster->GetDummyAuraEffect(SPELLFAMILY_SHAMAN, 2010, EFFECT_0))
-                    if (Aura* lShield = caster->GetAura(324, caster->GetGUID()))
-                        if (lShield->GetCharges() > fulmination->GetAmount())
-                        {
-                            uint8 charges = lShield->GetCharges() - fulmination->GetAmount();
-                            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(lShield->GetSpellInfo()->Effects[EFFECT_0].TriggerSpell);
-                            // Done fixed damage bonus auras
-                            int32 bonus  = caster->SpellBaseDamageBonusDone(spellInfo->GetSchoolMask()) * 0.267f;
-                            // Unsure about the calculation
-                            int32 basepoints0 = spellInfo->Effects[EFFECT_0].CalcValue(caster) + bonus;
-                            if (Player* modOwner = caster->GetSpellModOwner())
-                                modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_DAMAGE, basepoints0);
-
-                            basepoints0 *= charges;
-                            caster->CastCustomSpell(GetHitUnit(), SHAMAN_SPELL_FULMINATION, &basepoints0, NULL, NULL, true);
-                            // Remove Glow
-                            caster->RemoveAurasDueToSpell(SHAMAN_SPELL_FULMINATION_INSTANT);
-                            lShield->SetCharges(fulmination->GetAmount());
-                        }
-            }
-
-            void Register()
-            {
-                OnHit += SpellHitFn(spell_sha_fulmination_SpellScript::HandleOnHit);
-            }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_sha_fulmination_SpellScript();
+            if (!sSpellStore.LookupEntry(SHAMAN_SPELL_FULMINATION))
+                return false;
+            if (!sSpellStore.LookupEntry(SHAMAN_SPELL_FULMINATION_TRIGGERED))
+                return false;
+            if (!sSpellStore.LookupEntry(SHAMAN_SPELL_FULMINATION_INFO))
+                return false;
+            return true;
         }
+
+        void HandleFulmination(SpellEffIndex effIndex)
+        {
+            // make caster cast a spell on a unit target of effect
+            Unit *target = GetHitUnit();
+            Unit *caster = GetCaster();
+            if(!target || !caster)
+                return;
+
+            AuraEffect *fulminationAura = caster->GetDummyAuraEffect(SPELLFAMILY_SHAMAN, 2010, EFFECT_0);
+            if (!fulminationAura)
+                return;
+
+            Aura * lightningShield = caster->GetAura(324);
+            if(!lightningShield)
+                return;
+            uint8 lsCharges = lightningShield->GetCharges();
+            if(lsCharges <= 3)
+                return;
+            uint8 usedCharges = lsCharges - 3;
+
+            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(SHAMAN_SPELL_LIGHTNING_SHIELD_PROC);
+            int32 basePoints = caster->CalculateSpellDamage(target, spellInfo, 0);
+            uint32 damage = usedCharges * caster->SpellDamageBonus(target, spellInfo, basePoints, SPELL_DIRECT_DAMAGE);
+
+            caster->CastCustomSpell(SHAMAN_SPELL_FULMINATION_TRIGGERED, SPELLVALUE_BASE_POINT0, damage, target, true, NULL, fulminationAura);
+            lightningShield->SetCharges(lsCharges - usedCharges);
+        }
+
+        // register functions used in spell script - names of these functions do not matter
+        void Register()
+        {
+            OnEffectHitTarget += SpellEffectFn(spell_sha_fulminationSpellScript::HandleFulmination, EFFECT_FIRST_FOUND, SPELL_EFFECT_ANY);
+        }
+    };
+
+    // function which creates SpellScript
+    SpellScript *GetSpellScript() const
+    {
+        return new spell_sha_fulminationSpellScript();
+    }
 };
 
 // Improved Lava Lash trigger
