@@ -32,6 +32,7 @@ enum WarlockSpells
     SPELL_WARLOCK_AFTERMATH_STUN                    = 85387,
     SPELL_WARLOCK_BANE_OF_DOOM_EFFECT               = 18662,
     SPELL_WARLOCK_CREATE_HEALTHSTONE                = 34130,
+	SPELL_WARLOCK_CoE								= 1490,
     SPELL_WARLOCK_CURSE_OF_DOOM_EFFECT              = 18662,
     SPELL_WARLOCK_DEMONIC_CIRCLE_ALLOW_CAST         = 62388,
     SPELL_WARLOCK_DEMONIC_CIRCLE_SUMMON             = 48018,
@@ -60,6 +61,14 @@ enum WarlockSpells
     SPELL_WARLOCK_IMPROVED_HEALTH_FUNNEL_R2         = 18704,
     SPELL_WARLOCK_IMPROVED_SOUL_FIRE_PCT            = 85383,
     SPELL_WARLOCK_IMPROVED_SOUL_FIRE_STATE          = 85385,
+	SPELL_WARLOCK_JINX_ENERGY						= 85540,
+	SPELL_WARLOCK_JINX_RAGE							= 85539,
+	SPELL_WARLOCK_JINX_RUNIC_POWER					= 85541,
+	SPELL_WARLOCK_JINX_FOCUS						= 85542,
+	SPELL_WARLOCK_JINX_R1							= 18179,
+	SPELL_WARLOCK_JINX_R2							= 85479,
+	SPELL_WARLOCK_JINX_CoE_R1						= 85547,
+	SPELL_WARLOCK_JINX_CoE_R2						= 86105,
     SPELL_WARLOCK_LIFE_TAP_ENERGIZE                 = 31818,
     SPELL_WARLOCK_LIFE_TAP_ENERGIZE_2               = 32553,
     SPELL_WARLOCK_NETHER_WARD                       = 91711,
@@ -87,6 +96,23 @@ enum MiscSpells
 {
     SPELL_GEN_REPLENISHMENT                         = 57669,
     SPELL_PRIEST_SHADOW_WORD_DEATH                  = 32409
+};
+
+enum WarlockPetCalculate
+{
+	SPELL_PET_PASSIVE_CRIT = 35695,
+	SPELL_PET_PASSIVE_DAMAGE_TAKEN = 35697,
+	SPELL_WARLOCK_PET_SCALING_01 = 34947,
+	SPELL_WARLOCK_PET_SCALING_02 = 34956,
+	SPELL_WARLOCK_PET_SCALING_03 = 34957,
+	SPELL_WARLOCK_PET_SCALING_04 = 34958,
+	SPELL_WARLOCK_PET_SCALING_05 = 61013,
+	ENTRY_FELGUARD = 17252,
+	ENTRY_VOIDWALKER = 1860,
+	ENTRY_FELHUNTER = 417,
+	ENTRY_SUCCUBUS = 1863,
+	ENTRY_IMP = 416,
+	SPELL_WARLOCK_GLYPH_OF_VOIDWALKER = 56247,
 };
 
 // -85113 - Aftermath
@@ -256,6 +282,54 @@ class spell_warl_create_healthstone : public SpellScriptLoader
         {
             return new spell_warl_create_healthstone_SpellScript();
         }
+};
+
+class spell_warl_curse_of_the_elements : public SpellScriptLoader
+{
+public:
+	spell_warl_curse_of_the_elements() : SpellScriptLoader("spell_warl_curse_of_the_elements") { }
+
+	class spell_warl_curse_of_the_elements_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_curse_of_the_elements_AuraScript);
+
+		bool Validate(SpellInfo const* /*spellInfo*/)
+		{
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R1))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R2))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_CoE_R1))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_CoE_R2))
+				return false;
+
+			return true;
+		}
+
+		void HandleEffectPeriodic(AuraEffect const* /*aurEff*/)
+		{
+			Unit* caster = GetCaster();
+			Unit* target = GetTarget();
+			if (!caster || !target)
+				return;
+
+			if (caster->HasAura(SPELL_WARLOCK_JINX_R2))
+				caster->CastSpell(target, SPELL_WARLOCK_JINX_CoE_R2, true);
+			else if (caster->HasAura(SPELL_WARLOCK_JINX_R1))
+				caster->CastSpell(target, SPELL_WARLOCK_JINX_CoE_R1, true);
+		}
+
+		void Register()
+		{
+			OnEffectPeriodic += AuraEffectPeriodicFn(spell_warl_curse_of_the_elements_AuraScript::HandleEffectPeriodic, EFFECT_2, SPELL_AURA_PERIODIC_DUMMY);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_curse_of_the_elements_AuraScript();
+	}
 };
 
 // 603 - Bane of Doom
@@ -459,6 +533,116 @@ class spell_warl_demon_soul : public SpellScriptLoader
         {
             return new spell_warl_demon_soul_SpellScript;
         }
+};
+
+class spell_warl_curse_of_weakness : public SpellScriptLoader
+{
+public:
+	spell_warl_curse_of_weakness() : SpellScriptLoader("spell_warl_curse_of_weakness") { }
+
+	class spell_warl_curse_of_weakness_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_warl_curse_of_weakness_SpellScript);
+
+		bool Validate(SpellInfo const* /*spellInfo*/)
+		{
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_ENERGY))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_RAGE))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_RUNIC_POWER))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_FOCUS))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R1))
+				return false;
+			if (!sSpellMgr->GetSpellInfo(SPELL_WARLOCK_JINX_R2))
+				return false;
+
+			return true;
+		}
+
+		void HandleJinx()
+		{
+			Unit* caster = GetCaster();
+			Unit* target = GetHitUnit();
+			if (!caster || !target)
+				return;
+
+			uint32 trigerred_spell = 0;
+			switch (target->getPowerType())
+			{
+			case POWER_RAGE:
+				trigerred_spell = SPELL_WARLOCK_JINX_RAGE;
+				break;
+			case POWER_FOCUS:
+				trigerred_spell = SPELL_WARLOCK_JINX_FOCUS;
+				break;
+			case POWER_ENERGY:
+				trigerred_spell = SPELL_WARLOCK_JINX_ENERGY;
+				break;
+			case POWER_RUNIC_POWER:
+				trigerred_spell = SPELL_WARLOCK_JINX_RUNIC_POWER;
+				break;
+			default:
+				return;
+			}
+
+			if (AuraEffect const* aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_WARLOCK, 5002, EFFECT_1))
+			{
+				int32 basepoints0 = aurEff->GetAmount();
+				caster->CastCustomSpell(target, trigerred_spell, &basepoints0, NULL, NULL, true);
+			}
+		}
+
+		void Register()
+		{
+			OnHit += SpellHitFn(spell_warl_curse_of_weakness_SpellScript::HandleJinx);
+		}
+	};
+
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_warl_curse_of_weakness_SpellScript();
+	}
+};
+
+class spell_warl_jinx_coe : public SpellScriptLoader
+{
+public:
+	spell_warl_jinx_coe() : SpellScriptLoader("spell_warl_jinx_coe") { }
+
+	class spell_warl_jinx_coe_SpellScript : public SpellScript
+	{
+		PrepareSpellScript(spell_warl_jinx_coe_SpellScript);
+
+		void FilterTargetsInitial(std::list<WorldObject*>& targets)
+		{
+			targets.remove_if(Trinity::UnitAuraCheck(true, SPELL_WARLOCK_CoE));
+			if (targets.size() > 15)
+				targets.resize(15);
+
+			sharedTargets = targets;
+		}
+
+		void FilterTargetsSubsequent(std::list<WorldObject*>& targets)
+		{
+			targets = sharedTargets;
+		}
+
+		void Register()
+		{
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_warl_jinx_coe_SpellScript::FilterTargetsInitial, EFFECT_0, TARGET_UNIT_DEST_AREA_ENEMY);
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_warl_jinx_coe_SpellScript::FilterTargetsSubsequent, EFFECT_1, TARGET_UNIT_DEST_AREA_ENEMY);
+		}
+
+		std::list<WorldObject*> sharedTargets;
+	};
+
+	SpellScript* GetSpellScript() const
+	{
+		return new spell_warl_jinx_coe_SpellScript();
+	}
 };
 
 // 47193 - Demonic Empowerment
@@ -1438,6 +1622,386 @@ class spell_warl_unstable_affliction : public SpellScriptLoader
         }
 };
 
+/*PET SCALING*/
+class spell_warl_pet_scaling_01 : public SpellScriptLoader
+{
+public:
+	spell_warl_pet_scaling_01() : SpellScriptLoader("spell_warl_pet_scaling_01") { }
+
+	class spell_warl_pet_scaling_01_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_pet_scaling_01_AuraScript);
+
+		bool Load()
+		{
+			if (!GetCaster() || !GetCaster()->GetOwner() || GetCaster()->GetOwner()->GetTypeId() != TYPEID_PLAYER)
+				return false;
+			return true;
+		}
+
+		void ApplyEffect(AuraEffect const* /* aurEff */, AuraEffectHandleModes /*mode*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				pet->SetHealth(pet->GetMaxHealth());
+		}
+
+		void RemoveEffect(AuraEffect const* /* aurEff */, AuraEffectHandleModes /*mode*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				_tempHealth = pet->GetHealth();
+		}
+
+		void CalculateMaxHealthAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+						amount += owner->ToPlayer()->GetHealthBonusFromStamina() * 0.75f;
+		}
+
+		void CalculateAttackPowerAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						int32 fire = int32(owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + SPELL_SCHOOL_FIRE))
+							- owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG + SPELL_SCHOOL_FIRE);
+						int32 shadow = int32(owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + SPELL_SCHOOL_SHADOW))
+							- owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG + SPELL_SCHOOL_SHADOW);
+						int32 maximum = (fire > shadow) ? fire : shadow;
+						if (maximum < 0)
+							maximum = 0;
+						float bonusAP = maximum * 0.57f;
+						amount += bonusAP;
+						// Glyph of felguard
+						if (pet->GetEntry() == ENTRY_FELGUARD)
+						{
+							if (AuraEffect* ect = owner->GetAuraEffect(56246, EFFECT_0))
+							{
+								float base_attPower = pet->GetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE) * pet->GetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_PCT);
+								amount += CalculatePct(amount + base_attPower, ect->GetAmount());
+							}
+						}
+					}
+		}
+
+		void CalculateDamageDoneAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						//the damage bonus used for pets is either fire or shadow damage, whatever is higher
+						int32 fire = int32(owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + SPELL_SCHOOL_FIRE))
+							- owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG + SPELL_SCHOOL_FIRE);
+						int32 shadow = int32(owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + SPELL_SCHOOL_SHADOW))
+							- owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG + SPELL_SCHOOL_SHADOW);
+						int32 maximum = (fire > shadow) ? fire : shadow;
+						float bonusDamage = 0.0f;
+						if (maximum > 0)
+							bonusDamage = maximum * 0.15f;
+						amount += bonusDamage;
+					}
+		}
+
+		void Register()
+		{
+			OnEffectRemove += AuraEffectRemoveFn(spell_warl_pet_scaling_01_AuraScript::RemoveEffect, EFFECT_0, SPELL_AURA_MOD_STAT, AURA_EFFECT_HANDLE_CHANGE_AMOUNT_MASK);
+			AfterEffectApply += AuraEffectApplyFn(spell_warl_pet_scaling_01_AuraScript::ApplyEffect, EFFECT_0, SPELL_AURA_MOD_STAT, AURA_EFFECT_HANDLE_CHANGE_AMOUNT_MASK);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_01_AuraScript::CalculateMaxHealthAmount, EFFECT_0, SPELL_AURA_MOD_MAX_HEALTH);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_01_AuraScript::CalculateAttackPowerAmount, EFFECT_1, SPELL_AURA_MOD_ATTACK_POWER);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_01_AuraScript::CalculateDamageDoneAmount, EFFECT_2, SPELL_AURA_MOD_DAMAGE_DONE);
+		}
+
+	private:
+		uint32 _tempHealth;
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_pet_scaling_01_AuraScript();
+	}
+};
+
+class spell_warl_pet_scaling_02 : public SpellScriptLoader
+{
+public:
+	spell_warl_pet_scaling_02() : SpellScriptLoader("spell_warl_pet_scaling_02") { }
+
+	class spell_warl_pet_scaling_02_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_pet_scaling_02_AuraScript);
+
+		bool Load()
+		{
+			if (!GetCaster() || !GetCaster()->GetOwner() || GetCaster()->GetOwner()->GetTypeId() != TYPEID_PLAYER)
+				return false;
+			_tempMana = 0;
+			return true;
+		}
+
+		void ApplyEffect(AuraEffect const* /* aurEff */, AuraEffectHandleModes /*mode*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (_tempMana)
+					pet->SetPower(POWER_MANA, _tempMana);
+		}
+
+		void RemoveEffect(AuraEffect const* /* aurEff */, AuraEffectHandleModes /*mode*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				_tempMana = pet->GetPower(POWER_MANA);
+		}
+
+		void CalculateEnergyAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						float ownerBonus = 0.0f;
+						float multiplicator = 15.0f;
+
+						ownerBonus = CalculatePct(owner->GetStat(STAT_INTELLECT), 30);
+						switch (pet->ToCreature()->GetEntry())
+						{
+						case ENTRY_IMP:
+							multiplicator = 4.95f;
+							// Burning Embers
+							if (AuraEffect* aurEff = owner->GetAuraEffect(SPELL_AURA_DUMMY, SPELLFAMILY_WARLOCK, 5116, 0))
+								owner->AddAura(aurEff->GetSpellInfo()->Id, pet);
+							break;
+						case ENTRY_VOIDWALKER:
+						case ENTRY_SUCCUBUS:
+						case ENTRY_FELHUNTER:
+						case ENTRY_FELGUARD:
+							multiplicator = 11.5f;
+							break;
+						default:
+							multiplicator = 15.0f;
+							break;
+						}
+						amount += int32(ownerBonus * multiplicator);
+					}
+		}
+
+		void CalculateArmorAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						float ownerBonus = 0.0f;
+						ownerBonus = CalculatePct(owner->GetArmor(), 35);
+						amount += ownerBonus;
+					}
+		}
+
+		void CalculateFireResistanceAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = (pet->GetOwner()))
+					{
+						float ownerBonus = 0.0f;
+						ownerBonus = CalculatePct(owner->GetResistance(SPELL_SCHOOL_FIRE), 40);
+						amount += ownerBonus;
+					}
+		}
+
+		void Register()
+		{
+			OnEffectRemove += AuraEffectRemoveFn(spell_warl_pet_scaling_02_AuraScript::RemoveEffect, EFFECT_0, SPELL_AURA_MOD_STAT, AURA_EFFECT_HANDLE_CHANGE_AMOUNT_MASK);
+			AfterEffectApply += AuraEffectApplyFn(spell_warl_pet_scaling_02_AuraScript::ApplyEffect, EFFECT_0, SPELL_AURA_MOD_STAT, AURA_EFFECT_HANDLE_CHANGE_AMOUNT_MASK);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_02_AuraScript::CalculateEnergyAmount, EFFECT_0, SPELL_AURA_MOD_INCREASE_ENERGY);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_02_AuraScript::CalculateArmorAmount, EFFECT_1, SPELL_AURA_MOD_RESISTANCE);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_02_AuraScript::CalculateFireResistanceAmount, EFFECT_2, SPELL_AURA_MOD_RESISTANCE);
+		}
+
+	private:
+		uint32 _tempMana;
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_pet_scaling_02_AuraScript();
+	}
+};
+
+
+class spell_warl_pet_scaling_03 : public SpellScriptLoader
+{
+public:
+	spell_warl_pet_scaling_03() : SpellScriptLoader("spell_warl_pet_scaling_03") { }
+
+	class spell_warl_pet_scaling_03_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_pet_scaling_03_AuraScript);
+
+		bool Load()
+		{
+			if (!GetCaster() || !GetCaster()->GetOwner() || GetCaster()->GetOwner()->GetTypeId() != TYPEID_PLAYER)
+				return false;
+			return true;
+		}
+
+		void CalculateFrostResistanceAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						float ownerBonus = 0.0f;
+						ownerBonus = CalculatePct(owner->GetResistance(SPELL_SCHOOL_FROST), 40);
+						amount += ownerBonus;
+					}
+		}
+
+		void CalculateArcaneResistanceAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						float ownerBonus = 0.0f;
+						ownerBonus = CalculatePct(owner->GetResistance(SPELL_SCHOOL_ARCANE), 40);
+						amount += ownerBonus;
+					}
+		}
+
+		void CalculateNatureResistanceAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						float ownerBonus = 0.0f;
+						ownerBonus = CalculatePct(owner->GetResistance(SPELL_SCHOOL_NATURE), 40);
+						amount += ownerBonus;
+					}
+		}
+
+		void Register()
+		{
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_03_AuraScript::CalculateFrostResistanceAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_03_AuraScript::CalculateArcaneResistanceAmount, EFFECT_1, SPELL_AURA_MOD_RESISTANCE);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_03_AuraScript::CalculateNatureResistanceAmount, EFFECT_2, SPELL_AURA_MOD_RESISTANCE);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_pet_scaling_03_AuraScript();
+	}
+};
+
+
+
+class spell_warl_pet_scaling_04 : public SpellScriptLoader
+{
+public:
+	spell_warl_pet_scaling_04() : SpellScriptLoader("spell_warl_pet_scaling_04") { }
+
+	class spell_warl_pet_scaling_04_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_pet_scaling_04_AuraScript);
+
+		bool Load()
+		{
+			if (!GetCaster() || !GetCaster()->GetOwner() || GetCaster()->GetOwner()->GetTypeId() != TYPEID_PLAYER)
+				return false;
+			return true;
+		}
+
+		void CalculateShadowResistanceAmount(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Unit* pet = GetUnitOwner())
+				if (pet->IsPet())
+					if (Unit* owner = pet->GetOwner())
+					{
+						float ownerBonus = 0.0f;
+						ownerBonus = CalculatePct(owner->GetResistance(SPELL_SCHOOL_SHADOW), 40);
+						amount += ownerBonus;
+					}
+		}
+
+		void Register()
+		{
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_04_AuraScript::CalculateShadowResistanceAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_pet_scaling_04_AuraScript();
+	}
+};
+
+class spell_warl_pet_scaling_05 : public SpellScriptLoader
+{
+public:
+	spell_warl_pet_scaling_05() : SpellScriptLoader("spell_warl_pet_scaling_05") { }
+
+	class spell_warl_pet_scaling_05_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_warl_pet_scaling_05_AuraScript);
+
+		bool Load()
+		{
+			if (!GetCaster() || !GetCaster()->GetOwner() || GetCaster()->GetOwner()->GetTypeId() != TYPEID_PLAYER)
+				return false;
+			return true;
+		}
+
+		void CalculateAmountMeleeHit(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Player* owner = GetCaster()->GetOwner()->ToPlayer())
+			{
+				float HitMelee = 0.0f;
+				HitMelee += owner->GetTotalAuraModifier(SPELL_AURA_MOD_SPELL_HIT_CHANCE);
+				HitMelee += owner->GetRatingBonusValue(CR_HIT_SPELL);
+				amount += int32(HitMelee);
+			}
+		}
+
+		void CalculateAmountSpellHit(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Player* owner = GetCaster()->GetOwner()->ToPlayer())
+			{
+				float HitSpell = 0.0f;
+				HitSpell += owner->GetTotalAuraModifier(SPELL_AURA_MOD_SPELL_HIT_CHANCE);
+				HitSpell += owner->GetRatingBonusValue(CR_HIT_SPELL);
+				amount += int32(HitSpell);
+			}
+		}
+
+		void CalculateAmountExpertise(AuraEffect const* /* aurEff */, int32& amount, bool& /*canBeRecalculated*/)
+		{
+			if (Player* owner = GetCaster()->GetOwner()->ToPlayer())
+			{
+				float Expertise = 0.0f;
+				Expertise += owner->GetTotalAuraModifier(SPELL_AURA_MOD_SPELL_HIT_CHANCE);
+				Expertise += owner->GetRatingBonusValue(CR_HIT_SPELL);
+				amount += int32(Expertise);
+			}
+		}
+
+		void Register()
+		{
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_05_AuraScript::CalculateAmountMeleeHit, EFFECT_0, SPELL_AURA_MOD_HIT_CHANCE);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_05_AuraScript::CalculateAmountSpellHit, EFFECT_1, SPELL_AURA_MOD_SPELL_HIT_CHANCE);
+			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_warl_pet_scaling_05_AuraScript::CalculateAmountExpertise, EFFECT_2, SPELL_AURA_MOD_EXPERTISE);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_warl_pet_scaling_05_AuraScript();
+	}
+};
+
+
 void AddSC_warlock_spell_scripts()
 {
     new spell_warl_aftermath();
@@ -1445,6 +2009,8 @@ void AddSC_warlock_spell_scripts()
     new spell_warl_banish();
     new spell_warl_conflagrate();
     new spell_warl_create_healthstone();
+	new spell_warl_curse_of_the_elements();
+	new spell_warl_curse_of_weakness();
     new spell_warl_demonic_circle_summon();
     new spell_warl_demonic_circle_teleport();
     new spell_warl_demonic_empowerment();
@@ -1457,6 +2023,7 @@ void AddSC_warlock_spell_scripts()
     new spell_warl_health_funnel();
     new spell_warl_healthstone_heal();
     new spell_warl_improved_soul_fire();
+	new spell_warl_jinx_coe();
     new spell_warl_life_tap();
     new spell_warl_nether_ward_overrride();
     new spell_warl_seduction();
