@@ -2001,6 +2001,55 @@ public:
 	}
 };
 
+// Improved Lava Lash trigger
+class spell_sha_lava_lash_trigger : public SpellScriptLoader
+{
+    public:
+        spell_sha_lava_lash_trigger() : SpellScriptLoader("spell_sha_lava_lash_trigger") { }
+
+        class spell_sha_lava_lash_trigger_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_sha_lava_lash_trigger_SpellScript)
+
+            bool Load()
+            {
+                return GetCaster()->GetTypeId() == TYPEID_PLAYER;
+            }
+
+            void FilterTargets(std::list<WorldObject*>& unitList)
+            {
+                targets = unitList;
+                if (GetExplTargetUnit())
+                    targets.remove(GetExplTargetUnit());
+            }
+
+            void HandleOnHit()
+            {
+                if (Unit* target = GetHitUnit())
+                    if (Aura* flameShock = target->GetAura(8050, GetCaster()->GetGUID()))
+                        for (std::list<WorldObject*>::const_iterator itr = targets.begin(); itr != targets.end(); ++itr)
+                            if (Unit* triggerTarget = (*itr)->ToUnit())
+                                GetCaster()->AddAuraForTarget(flameShock, triggerTarget);
+            }
+
+
+            void Register()
+            {
+                OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_sha_lava_lash_trigger_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_DEST_AREA_ENEMY);
+                OnHit += SpellHitFn(spell_sha_lava_lash_trigger_SpellScript::HandleOnHit);
+            }
+
+        private:
+            std::list<WorldObject*> targets;
+
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_sha_lava_lash_trigger_SpellScript();
+        }
+};
+
 
 void AddSC_warlock_spell_scripts()
 {
@@ -2037,4 +2086,5 @@ void AddSC_warlock_spell_scripts()
     new spell_warl_soul_swap_override();
     new spell_warl_soulshatter();
     new spell_warl_unstable_affliction();
+	new spell_sha_lava_lash_trigger();
 }
