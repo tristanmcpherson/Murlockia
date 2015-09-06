@@ -1185,4 +1185,5 @@ void AddSC_rogue_spell_scripts()
     new spell_rog_tricks_of_the_trade_proc();
     new spell_rog_serrated_blades();
 	new spell_rogue_glyph_of_hemorrhage();
+	new spell_rog_blind();
 }
