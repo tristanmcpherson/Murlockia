@@ -1253,7 +1253,7 @@ public:
     {
         PrepareSpellScript(spell_sha_fulminationSpellScript);
 
-        bool Validate(SpellEntry const * /*spellEntry*/)
+        bool Validate(SpellInfo const * /*spellEntry*/)
         {
             if (!sSpellStore.LookupEntry(SHAMAN_SPELL_FULMINATION))
                 return false;
