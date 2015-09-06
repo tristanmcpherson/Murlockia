@@ -1008,6 +1008,54 @@ public:
     }
 };
 
+class spell_rogue_glyph_of_hemorrhage : public SpellScriptLoader
+{
+public:
+	spell_rogue_glyph_of_hemorrhage() : SpellScriptLoader("spell_rogue_glyph_of_hemorrhage") {}
+
+	class script_impl : public AuraScript
+	{
+		PrepareAuraScript(script_impl);
+
+		bool Load()
+		{
+			Unit const* const caster = GetCaster();
+			return caster && caster->GetTypeId() == TYPEID_PLAYER;
+		}
+
+		bool HandleCheckProc(ProcEventInfo& eventInfo)
+		{
+			DamageInfo* const damageInfo = eventInfo.GetDamageInfo();
+			return damageInfo && damageInfo->GetDamage();
+		}
+
+		void HandleEffectProc(AuraEffect const* aurEff, ProcEventInfo& procInfo)
+		{
+			PreventDefaultAction();
+			Unit* const target = procInfo.GetProcTarget();
+			if (!target)
+				return;
+
+			uint32 const damage = procInfo.GetDamageInfo()->GetDamage();
+			int32 const value = CalculatePct(damage, aurEff->GetAmount()) / 8; // total 40% damage will proc every 3s for 24s, so divide by 8
+			uint32 const triggerSpellId = GetSpellInfo()->Effects[EFFECT_0].TriggerSpell;
+
+			GetCaster()->CastCustomSpell(target, triggerSpellId, &value, NULL, NULL, true);
+		}
+
+		void Register()
+		{
+			DoCheckProc += AuraCheckProcFn(script_impl::HandleCheckProc);
+			OnEffectProc += AuraEffectProcFn(script_impl::HandleEffectProc, EFFECT_0, SPELL_AURA_DUMMY);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new script_impl();
+	}
+};
+
 void AddSC_rogue_spell_scripts()
 {
     new spell_rog_blade_flurry();
@@ -1028,4 +1076,5 @@ void AddSC_rogue_spell_scripts()
     new spell_rog_tricks_of_the_trade();
     new spell_rog_tricks_of_the_trade_proc();
     new spell_rog_serrated_blades();
+	new spell_rogue_glyph_of_hemorrhage();
 }
