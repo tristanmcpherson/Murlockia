@@ -52,6 +52,9 @@ enum RogueSpells
     SPELL_ROGUE_TRICKS_OF_THE_TRADE_PROC            = 59628,
     SPELL_ROGUE_SERRATED_BLADES_R1                  = 14171,
     SPELL_ROGUE_RUPTURE                             = 1943,
+	SPELL_ROGUE_EVISCERATE_BONUS  					= 37169,
+    SPELL_REVEALING_STRIKE  						= 84617,
+	SPELL_ROGUE_GLYPH_OF_BLIND		             	= 91299,
 };
 
 enum RogueSpellIcons
@@ -1054,6 +1057,111 @@ public:
 	{
 		return new script_impl();
 	}
+};
+
+class spell_rogue_eviscerate : public SpellScriptLoader
+{
+	
+public:
+    spell_rogue_eviscerate(): SpellScriptLoader("spell_rogue_eviscerate") { }
+	
+    class script_impl : public SpellScript
+    {
+        PrepareSpellScript(script_impl);
+
+        bool Load()
+        {
+            return GetCaster()->GetTypeId() == TYPEID_PLAYER;
+        }
+
+        void HandleHit()
+        {
+            Player* const caster = GetCaster()->ToPlayer();
+            Unit* const target = GetHitUnit();
+            if (!target)
+                return;
+
+            int32 value = GetHitDamage();
+            uint8 const cp = caster->GetComboPoints();
+            float const ap = caster->GetTotalAttackPowerValue(BASE_ATTACK);
+
+            value += int32(ap * cp * 0.091f);
+
+            // Eviscerate and Envenom Bonus Damage
+            if (AuraEffect const* const aurEff = caster->GetAuraEffect(SPELL_ROGUE_EVISCERATE_BONUS, EFFECT_0))
+                value += cp * aurEff->GetAmount();
+
+            // Revealing Strike
+            if (AuraEffect const* const aurEff = target->GetAuraEffect(SPELL_REVEALING_STRIKE, EFFECT_2))
+                AddPct(value, aurEff->GetAmount());
+
+            // Serrated Blades
+            if (AuraEffect const* const aurEff = caster->GetAuraEffectOfRankedSpell(SPELL_ROGUE_SERRATED_BLADES_R1, EFFECT_0))
+                if (roll_chance_i(aurEff->GetAmount() * cp))
+                    if (Aura* const aura = target->GetAura(SPELL_ROGUE_RUPTURE, caster->GetGUID()))
+                        aura->RefreshDuration();
+
+            SetHitDamage(value);
+        }
+
+        void Register()
+        {
+            OnHit += SpellHitFn(script_impl::HandleHit);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new script_impl();
+    }
+};
+
+// 2094 - Blind
+class spell_rog_blind : public SpellScriptLoader
+{
+    public:
+        spell_rog_blind() : SpellScriptLoader("spell_rog_blind") { }
+
+        class spell_rog_blind_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_rog_blind_AuraScript);
+			
+            bool Load()
+            {
+                return GetCaster()->GetTypeId() == TYPEID_PLAYER;
+            }
+
+            bool Validate(SpellInfo const* /*spellInfo*/)
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_ROGUE_GLYPH_OF_BLIND))
+                    return false;
+                return true;
+            }
+
+            void HandleEffectApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+            {
+                // Glyph of Blind
+				if(GetCaster() && GetCaster()->HasAura(SPELL_ROGUE_GLYPH_OF_BLIND))
+				{
+					if(Unit* target = GetTarget())
+					{
+                        target->RemoveAurasByType(SPELL_AURA_PERIODIC_DAMAGE, 0, target->GetAura(32409)); // SW:D shall not be removed.
+						target->RemoveAurasByType(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
+						target->RemoveAurasByType(SPELL_AURA_PERIODIC_LEECH);
+					}
+				}
+            }
+
+            void Register()
+            {
+                AfterEffectApply += AuraEffectApplyFn(spell_rog_blind_AuraScript::HandleEffectApply, EFFECT_1, SPELL_AURA_MOD_CONFUSE, AURA_EFFECT_HANDLE_REAL);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_rog_blind_AuraScript();
+        }
 };
 
 void AddSC_rogue_spell_scripts()
