@@ -56,7 +56,8 @@ enum RogueSpells
     SPELL_REVEALING_STRIKE  						= 84617,
 	SPELL_ROGUE_GLYPH_OF_BLIND		             	= 91299,
 	SPELL_ROGUE_SMOKE_BOMB							= 76577,
-	SPELL_ROGUE_SMOKE_BOMB_EFFECT					= 88611
+	SPELL_ROGUE_SMOKE_BOMB_EFFECT					= 88611,
+	SPELL_SANGUINARY_VEIN 							= 79146
 };
 
 enum RogueSpellIcons
@@ -1230,6 +1231,55 @@ class spell_rog_smoke_bomb_inv : public SpellScriptLoader
         }
 };
 
+class spell_rogue_gouge : public SpellScriptLoader
+{
+	public:
+	spell_rogue_gouge() : SpellScriptLoader("spell_rogue_gouge") { }
+	
+    class aura_script_impl : public AuraScript
+    {
+
+        PrepareAuraScript(aura_script_impl);
+
+        bool Load()
+        {
+            Unit const* const caster = GetCaster();
+            return caster && caster->GetTypeId() == TYPEID_PLAYER;
+        }
+
+        bool HandleCheckProc(ProcEventInfo& eventInfo)
+        {
+            Unit const* const caster = GetCaster();
+            SpellInfo const* const triggerSpell = eventInfo.GetSpellInfo();
+
+            if (triggerSpell)
+            {
+                // Prevents proc by damage from the spell itself
+                if (triggerSpell->Id != GetId())
+                    return true;
+
+                // Sanguinary Vein
+                if (AuraEffect const* const aurEff = caster->GetAuraEffectOfRankedSpell(SPELL_SANGUINARY_VEIN, EFFECT_1))
+                    if (triggerSpell->GetAuraState() == AURA_STATE_BLEEDING && roll_chance_i(aurEff->GetAmount()))
+                        return false;
+            }
+
+            return true;
+        }
+
+        void Register()
+        {
+            DoCheckProc += AuraCheckProcFn(aura_script_impl::HandleCheckProc);
+        }
+    };
+
+
+    AuraScript* GetAuraScript() const
+    {
+        return new aura_script_impl();
+    }
+};
+
 void AddSC_rogue_spell_scripts()
 {
     new spell_rog_blade_flurry();
@@ -1253,4 +1303,5 @@ void AddSC_rogue_spell_scripts()
 	new spell_rogue_glyph_of_hemorrhage();
 	new spell_rog_blind();
 	new spell_rog_smoke_bomb_inv();
+	new spell_rogue_gouge();
 }

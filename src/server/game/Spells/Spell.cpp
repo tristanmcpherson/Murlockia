@@ -4910,7 +4910,19 @@ SpellCastResult Spell::CheckCast(bool strict)
 
             // Target must be facing you
             if (m_spellInfo->HasAttribute(SPELL_ATTR0_CU_REQ_TARGET_FACING_CASTER) && !target->HasInArc(static_cast<float>(M_PI), m_caster))
+			{
+                bool needsFacing = true;
+                switch (m_spellInfo->Id)
+                {
+                    case 1776: // Gouge
+                        needsFacing = !m_caster->HasAura(56809);
+                        break;
+                    default:
+                        break;
+                }
+                if (needsFacing)
                 return SPELL_FAILED_NOT_INFRONT;
+			}
 
             if (m_caster->GetEntry() != WORLD_TRIGGER) // Ignore LOS for gameobjects casts (wrongly cast by a trigger)
             {

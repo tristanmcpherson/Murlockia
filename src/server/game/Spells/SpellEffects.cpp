@@ -1072,6 +1072,15 @@ void Spell::EffectApplyAura(SpellEffIndex effIndex)
 
     if (!m_spellAura || !unitTarget)
         return;
+	
+	switch (m_spellInfo->SpellFamilyName)
+    {
+    case SPELLFAMILY_ROGUE:
+        if (m_spellInfo->SpellFamilyFlags[0] == 0x8)    //Gouge
+            m_caster->CastSpell(unitTarget, 1776, true);
+        break;
+	}
+	
     ASSERT(unitTarget == m_spellAura->GetOwner());
     m_spellAura->_ApplyEffectForTargets(effIndex);
 }
