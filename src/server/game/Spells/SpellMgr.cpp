@@ -2998,6 +2998,15 @@ void SpellMgr::LoadSpellInfoCustomAttributes()
                 if (spellInfo->SpellFamilyFlags[0] & 0x8)
                     spellInfo->AttributesCu |= SPELL_ATTR0_CU_AURA_CC;
                 break;
+			case SPELLFAMILY_ROGUE:
+				switch(spellInfo->Id)
+                {
+				// Smoke Bomb
+                case 76577:
+					spellInfo->AttributesEx |= SPELL_ATTR1_NOT_BREAK_STEALTH;
+                    break;
+				}
+				break;
             default:
                 break;
         }

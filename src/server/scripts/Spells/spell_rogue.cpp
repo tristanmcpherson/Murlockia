@@ -55,6 +55,8 @@ enum RogueSpells
 	SPELL_ROGUE_EVISCERATE_BONUS  					= 37169,
     SPELL_REVEALING_STRIKE  						= 84617,
 	SPELL_ROGUE_GLYPH_OF_BLIND		             	= 91299,
+	SPELL_ROGUE_SMOKE_BOMB							= 76577,
+	SPELL_ROGUE_SMOKE_BOMB_EFFECT					= 88611
 };
 
 enum RogueSpellIcons
@@ -1164,6 +1166,70 @@ class spell_rog_blind : public SpellScriptLoader
         }
 };
 
+// 76577 - Smoke Bomb
+class spell_rog_smoke_bomb_inv : public SpellScriptLoader
+{
+    public:
+        spell_rog_smoke_bomb_inv() : SpellScriptLoader("spell_rog_smoke_bomb_inv") { }
+
+        class spell_rog_smoke_bomb_inv_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_rog_smoke_bomb_inv_SpellScript);
+
+            void FilterTargets(std::list<WorldObject*>& targets)
+            {
+                for (std::list<WorldObject*>::const_iterator itr = targets.begin(); itr != targets.end(); ++itr)
+                {
+                    if((*itr)->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        Player* pl = (*itr)->ToPlayer();
+                        if(!pl->IsFriendlyTo(GetCaster()))
+                            pl->RemoveAurasByType(SPELL_AURA_MOD_STEALTH);
+                    }
+                }
+            }
+
+            void Register()
+            {
+                OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_rog_smoke_bomb_inv_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_DEST_AREA_ENTRY);
+            }
+        };
+
+        class spell_rog_smoke_bomb_inv_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_rog_smoke_bomb_inv_AuraScript);
+       
+            void OnTick(AuraEffect const* aurEff)
+            {
+                Unit* caster = GetCaster();
+
+                if(!caster)
+                    return;
+
+                if (DynamicObject* dynObj = caster->GetDynObject(SPELL_ROGUE_SMOKE_BOMB))
+                {   
+                    // Casts aoe interfere targetting aura
+                    caster->CastSpell(dynObj->GetPositionX(), dynObj->GetPositionY(), dynObj->GetPositionZ(), SPELL_ROGUE_SMOKE_BOMB_EFFECT, true);
+                }
+            }
+
+            void Register()
+            {
+                OnEffectPeriodic += AuraEffectPeriodicFn(spell_rog_smoke_bomb_inv_AuraScript::OnTick, EFFECT_1, SPELL_AURA_PERIODIC_DUMMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_rog_smoke_bomb_inv_SpellScript();
+        }
+    
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_rog_smoke_bomb_inv_AuraScript();
+        }
+};
+
 void AddSC_rogue_spell_scripts()
 {
     new spell_rog_blade_flurry();
@@ -1186,4 +1252,5 @@ void AddSC_rogue_spell_scripts()
     new spell_rog_serrated_blades();
 	new spell_rogue_glyph_of_hemorrhage();
 	new spell_rog_blind();
+	new spell_rog_smoke_bomb_inv();
 }
