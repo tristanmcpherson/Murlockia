@@ -65,7 +65,13 @@ enum ShamanSpells
     SHAMAN_SPELL_FULMINATION                	= 88766,
     SHAMAN_SPELL_FULMINATION_TRIGGERED      	= 88767,
     SHAMAN_SPELL_FULMINATION_INFO           	= 95774,
-	SHAMAN_SPELL_LIGHTNING_SHIELD_PROC          = 26364
+	SHAMAN_SPELL_LIGHTNING_SHIELD_PROC          = 26364,
+	SPELL_SHAMAN_UNLEASH_EARTH                  = 73684,
+    SPELL_SHAMAN_UNLEASH_ELEMENTS               = 73680,
+    SPELL_SHAMAN_UNLEASH_FLAME                  = 73683,
+    SPELL_SHAMAN_UNLEASH_FROST                  = 73682,
+    SPELL_SHAMAN_UNLEASH_LIFE                   = 73685,
+    SPELL_SHAMAN_UNLEASH_WIND                   = 73681,
 };
 
 enum ShamanSpellIcons
@@ -1349,6 +1355,107 @@ class spell_sha_lava_lash_trigger : public SpellScriptLoader
         }
 };
 
+// 73680 - Unleash Elements
+/// Updated 4.3.4
+class spell_sha_unleash_elements : public SpellScriptLoader
+{
+    public:
+        spell_sha_unleash_elements() : SpellScriptLoader("spell_sha_unleash_elements") { }
+
+        class spell_sha_unleash_elements_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_sha_unleash_elements_SpellScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/)
+            {
+                if (!sSpellStore.LookupEntry(SPELL_SHAMAN_UNLEASH_ELEMENTS))
+                    return false;
+                return true;
+            }
+
+            void HandleDummy(SpellEffIndex /*effIndex*/)
+            {
+                if (Unit* caster = GetCaster())
+                {
+                    if (Unit* target = GetExplTargetUnit())
+                    {
+                        Item* weapons[2]= {0,0};
+                        weapons[0] = caster->ToPlayer()->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND);
+                        weapons[1] = caster->ToPlayer()->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
+
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(!weapons[i])
+                                continue;
+                        
+                            switch (weapons[i]->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT))
+                            {
+                                case 3345:  // Earthliving Weapon
+                                    caster->CastSpell(target, SPELL_SHAMAN_UNLEASH_LIFE, true);
+                                    break;
+                                case 5:     // Flametongue Weapon
+                                    caster->CastSpell(target, SPELL_SHAMAN_UNLEASH_FLAME, true);
+                                    break;
+                                case 2:     // Frostbrand Weapon
+                                    caster->CastSpell(target, SPELL_SHAMAN_UNLEASH_FROST, true);
+                                    break;
+                                case 3021:  // Rockbiter Weapon
+                                    caster->CastSpell(target, SPELL_SHAMAN_UNLEASH_EARTH, true);
+                                    break;
+                                case 283:   // Windfury Weapon
+                                    caster->CastSpell(target, SPELL_SHAMAN_UNLEASH_WIND, true);
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            SpellCastResult CheckCast()
+            {
+                if (Unit* caster = GetCaster())
+                {
+                    if (Unit* target = GetExplTargetUnit())
+                    {
+                        Item* weapons[2]= {0,0};
+                        weapons[0] = caster->ToPlayer()->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND);
+                        weapons[1] = caster->ToPlayer()->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
+
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(!weapons[i])
+                                continue;
+
+                            if(weapons[i]->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT) == 3345)
+                            {
+                                if(!caster->ToPlayer()->IsFriendlyTo(target))
+                                    return SPELL_FAILED_SUCCESS;
+                                else
+                                    return SPELL_CAST_OK;
+                            }
+
+                            if (caster->ToPlayer()->IsFriendlyTo(target))
+                                return SPELL_FAILED_TARGET_FRIENDLY;
+                        }
+                    }
+                }
+
+                return SPELL_CAST_OK;
+            }
+
+            void Register()
+            {
+                OnEffectHit += SpellEffectFn(spell_sha_unleash_elements_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+                OnCheckCast += SpellCheckCastFn(spell_sha_unleash_elements_SpellScript::CheckCast);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_sha_unleash_elements_SpellScript();
+        }
+};
+
 void AddSC_shaman_spell_scripts()
 {
     new spell_sha_ancestral_awakening();
@@ -1380,4 +1487,5 @@ void AddSC_shaman_spell_scripts()
     new spell_sha_tidal_waves();
 	new spell_sha_fulmination();
 	new spell_sha_lava_lash_trigger();
+	new spell_sha_unleash_elements();
 }
