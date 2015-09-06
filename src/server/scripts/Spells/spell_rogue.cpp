@@ -1164,65 +1164,6 @@ class spell_rog_blind : public SpellScriptLoader
         }
 };
 
-// 1943 - Rupture
-class spell_rog_rupture : public SpellScriptLoader
-{
-public:
-	spell_rog_rupture() : SpellScriptLoader("spell_rog_rupture") { }
-
-	class spell_rog_rupture_AuraScript : public AuraScript
-	{
-		PrepareAuraScript(spell_rog_rupture_AuraScript);
-
-		bool Load()
-		{
-			Unit* caster = GetCaster();
-			return caster && caster->GetTypeId() == TYPEID_PLAYER;
-		}
-
-		void CalculateAmount(AuraEffect const* /*aurEff*/, int32& amount, bool& canBeRecalculated)
-		{
-			if (Unit* caster = GetCaster())
-			{
-				canBeRecalculated = false;
-
-				float const attackpowerPerCombo[6] =
-				{
-					0.0f,
-					0.015f,         // 1 point:  ${($m1 + $b1*1 + 0.015 * $AP) * 4} damage over 8 secs
-					0.024f,         // 2 points: ${($m1 + $b1*2 + 0.024 * $AP) * 5} damage over 10 secs
-					0.03f,          // 3 points: ${($m1 + $b1*3 + 0.03 * $AP) * 6} damage over 12 secs
-					0.03428571f,    // 4 points: ${($m1 + $b1*4 + 0.03428571 * $AP) * 7} damage over 14 secs
-					0.0375f         // 5 points: ${($m1 + $b1*5 + 0.0375 * $AP) * 8} damage over 16 secs
-				};
-
-				uint8 cp = caster->ToPlayer()->GetComboPoints();
-				if (cp > 5)
-					cp = 5;
-
-				amount += int32(caster->GetTotalAttackPowerValue(BASE_ATTACK) * attackpowerPerCombo[cp]);
-
-				// Revealing Strike
-				if (GetUnitOwner())
-				{
-					if (GetUnitOwner()->HasAura(84617))
-						AddPct(amount, 35);
-				}
-			}
-		}
-
-		void Register()
-		{
-			DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_rog_rupture_AuraScript::CalculateAmount, EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE);
-		}
-	};
-
-	AuraScript* GetAuraScript() const
-	{
-		return new spell_rog_rupture_AuraScript();
-	}
-};
-
 void AddSC_rogue_spell_scripts()
 {
     new spell_rog_blade_flurry();
@@ -1245,5 +1186,4 @@ void AddSC_rogue_spell_scripts()
     new spell_rog_serrated_blades();
 	new spell_rogue_glyph_of_hemorrhage();
 	new spell_rog_blind();
-	new spell_rog_rupture();
 }
