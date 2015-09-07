@@ -3824,10 +3824,18 @@ void Spell::EffectAddComboPoints(SpellEffIndex /*effIndex*/)
     if (!m_caster->m_movedPlayer)
         return;
 
-    if (damage <= 0)
-        return;
+     Player* plr = m_caster->m_movedPlayer;
+     if (!plr)
+         return;
 
-    m_caster->m_movedPlayer->AddComboPoints(unitTarget, damage, this);
+     if (damage > 0)
+         plr->AddComboPoints(unitTarget, damage, this);
+     else
+     {
+         // Rogue: Redirect
+         if (GetSpellInfo()->Id == 73981 && plr->GetComboPoints() > 0 && plr->GetComboTarget())
+             plr->AddComboPoints(unitTarget, plr->GetComboPoints(), this);
+     }
 }
 
 void Spell::EffectDuel(SpellEffIndex effIndex)
