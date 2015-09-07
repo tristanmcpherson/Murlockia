@@ -6637,16 +6637,10 @@ bool Unit::HandleAuraProc(Unit* victim, uint32 /*damage*/, Aura* triggeredByAura
                         if (procSpell->Id == 1776)
                             return false;
 
-                        // Sanguinary veins
-                        if (triggeredByAura->GetCaster())
-                        {
-                            if (AuraEffect* aurEff = triggeredByAura->GetCaster()->GetDummyAuraEffect(SPELLFAMILY_GENERIC, 4821, EFFECT_1))
-                            {
-                                if (procSpell->Mechanic == MECHANIC_BLEED)
-                                    if (roll_chance_i(aurEff->GetAmount()))
-                                        return false;
-                            }
-                        }
+                        // Sanguinary Vein
+						if (AuraEffect const* const aurEff = caster->GetAuraEffectOfRankedSpell(79146, EFFECT_1))
+							if (triggerSpell->GetAuraState() == AURA_STATE_BLEEDING && roll_chance_i(aurEff->GetAmount()))
+								return false;
                     }
                     return true;
                     break;
