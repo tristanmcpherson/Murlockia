@@ -6632,8 +6632,22 @@ bool Unit::HandleAuraProc(Unit* victim, uint32 /*damage*/, Aura* triggeredByAura
                 // Gouge
                 case 1776:
                     *handled = true;
-                    if(procSpell && procSpell->Id == 1776)
-                        return false;
+                    if(procSpell)
+                    {
+                        if (procSpell->Id == 1776)
+                            return false;
+
+                        // Sanguinary veins
+                        if (triggeredByAura->GetCaster())
+                        {
+                            if (AuraEffect* aurEff = triggeredByAura->GetCaster()->GetDummyAuraEffect(SPELLFAMILY_GENERIC, 4821, EFFECT_1))
+                            {
+                                if (procSpell->Mechanic == MECHANIC_BLEED)
+                                    if (roll_chance_i(aurEff->GetAmount()))
+                                        return false;
+                            }
+                        }
+                    }
                     return true;
                     break;
             }
