@@ -1231,6 +1231,56 @@ public:
 	}
 };
 
+class spell_rog_gouge : public SpellScriptLoader
+	 {
+	public:
+		spell_rog_gouge() : SpellScriptLoader("spell_rog_gouge") { }
+		
+			class aura_script_impl : public AuraScript
+			 {
+			
+				PrepareAuraScript(aura_script_impl);
+			
+				bool Load()
+				 {
+				Unit const* const caster = GetCaster();
+				return caster && caster->GetTypeId() == TYPEID_PLAYER;
+				}
+			
+				bool HandleCheckProc(ProcEventInfo& eventInfo)
+				 {
+				Unit const* const caster = GetCaster();
+				SpellInfo const* const triggerSpell = eventInfo.GetSpellInfo();
+				
+					if (triggerSpell)
+					{
+					                // Prevents proc by damage from the spell itself
+						if (triggerSpell->Id != GetId())
+						return true;
+					
+						               // Sanguinary Vein
+						if (AuraEffect const* const aurEff = caster->GetAuraEffectOfRankedSpell(SPELL_SANGUINARY_VEIN, EFFECT_1))
+						 if (triggerSpell->GetAuraState() == AURA_STATE_BLEEDING && roll_chance_i(aurEff->GetAmount()))
+						 return false;
+					}
+				
+					return true;
+				}
+			
+				void Register()
+				 {
+				DoCheckProc += AuraCheckProcFn(aura_script_impl::HandleCheckProc);
+				}
+			};
+		
+			
+			AuraScript* GetAuraScript() const
+			{
+			return new aura_script_impl();
+			}
+};
+
+
 void AddSC_rogue_spell_scripts()
 {
 	new spell_rog_blade_flurry();
@@ -1238,6 +1288,7 @@ void AddSC_rogue_spell_scripts()
 	new spell_rog_crippling_poison();
 	new spell_rog_cut_to_the_chase();
 	new spell_rog_deadly_poison();
+	new spell_rog_gouge();
 	new spell_rog_killing_spree();
 	new spell_rog_master_of_subtlety();
 	new spell_rog_nerves_of_steel();
