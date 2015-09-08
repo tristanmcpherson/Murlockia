@@ -6638,8 +6638,8 @@ bool Unit::HandleAuraProc(Unit* victim, uint32 /*damage*/, Aura* triggeredByAura
                             return false;
 
                         // Sanguinary Vein
-						if (AuraEffect const* const aurEff = caster->GetAuraEffectOfRankedSpell(79146, EFFECT_1))
-							if (triggerSpell->GetAuraState() == AURA_STATE_BLEEDING && roll_chance_i(aurEff->GetAmount()))
+						if (AuraEffect const* const aurEff = triggeredByAura->GetCaster()->GetAuraEffectOfRankedSpell(79146, EFFECT_1))
+							if (procSpell->GetAuraState() == AURA_STATE_BLEEDING && roll_chance_i(aurEff->GetAmount()))
 								return false;
                     }
                     return true;
